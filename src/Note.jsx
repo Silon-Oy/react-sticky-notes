@@ -20,6 +20,7 @@ export function Note({ note, onUpdate, onDelete }) {
   const containerRef = useRef(null);
   const [dragging, setDragging] = useState(false);
   const didDrag = useRef(false);
+  const dragStart = useRef({ x: 0, y: 0 });
   const dragOffset = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -42,15 +43,21 @@ export function Note({ note, onUpdate, onDelete }) {
         x: clientX - note.x,
         y: clientY - note.y,
       };
+      dragStart.current = { x: clientX, y: clientY };
       didDrag.current = false;
       setDragging(true);
     },
     [note.x, note.y]
   );
 
+  const DRAG_THRESHOLD = 5;
+
   const onDrag = useCallback(
     (clientX, clientY) => {
       if (!dragging) return;
+      const dx = clientX - dragStart.current.x;
+      const dy = clientY - dragStart.current.y;
+      if (!didDrag.current && dx * dx + dy * dy < DRAG_THRESHOLD * DRAG_THRESHOLD) return;
       didDrag.current = true;
       onUpdate(note.id, {
         x: clientX - dragOffset.current.x,

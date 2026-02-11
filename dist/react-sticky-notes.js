@@ -1,6 +1,6 @@
-import { jsx as m, jsxs as E, Fragment as D } from "react/jsx-runtime";
-import { useState as N, useRef as S, useEffect as k, useCallback as x } from "react";
-const v = [
+import { jsx as b, jsxs as N, Fragment as T } from "react/jsx-runtime";
+import { useState as z, useRef as S, useEffect as C, useCallback as p } from "react";
+const k = [
   { name: "yellow", bg: "#fef9c3", border: "#facc15", text: "#713f12" },
   { name: "pink", bg: "#fce7f3", border: "#f472b6", text: "#831843" },
   { name: "blue", bg: "#dbeafe", border: "#60a5fa", text: "#1e3a5f" },
@@ -8,215 +8,217 @@ const v = [
   { name: "orange", bg: "#ffedd5", border: "#fb923c", text: "#7c2d12" },
   { name: "purple", bg: "#f3e8ff", border: "#c084fc", text: "#581c87" }
 ];
-function T(t) {
+function L(e) {
   try {
-    const n = localStorage.getItem(t);
+    const n = localStorage.getItem(e);
     return n ? JSON.parse(n) : [];
   } catch {
     return [];
   }
 }
-function $(t, n) {
+function $(e, n) {
   try {
-    localStorage.setItem(t, JSON.stringify(n));
+    localStorage.setItem(e, JSON.stringify(n));
   } catch {
   }
 }
-async function C(t, n, l) {
-  const r = await fetch(t, {
+async function I(e, n, d) {
+  const r = await fetch(e, {
     ...n,
     headers: {
       "Content-Type": "application/json",
-      "X-API-Key": l,
+      "X-API-Key": d,
       ...n && n.headers
     }
   });
   if (!r.ok) throw new Error(`API ${r.status}`);
   return r.json();
 }
-function L(t = "react-sticky-notes", n = null, l = null) {
-  const r = !!n, g = `sticky-notes:${t}`, [s, b] = N(() => r ? [] : T(g)), i = S(/* @__PURE__ */ new Set()), h = S({});
-  k(() => {
-    r || $(g, s);
-  }, [r, g, s]), k(() => {
+function R(e = "react-sticky-notes", n = null, d = null) {
+  const r = !!n, g = `sticky-notes:${e}`, [a, y] = z(() => r ? [] : L(g)), s = S(/* @__PURE__ */ new Set()), h = S({});
+  C(() => {
+    r || $(g, a);
+  }, [r, g, a]), C(() => {
     if (!r) return;
     let c = !0;
-    const f = async () => {
+    const u = async () => {
       try {
-        const e = await C(n, {}, l);
+        const m = await I(n, {}, d);
         if (!c) return;
-        b((a) => {
-          const p = e.map((d) => i.current.has(d.id) && a.find((I) => I.id === d.id) || d);
-          for (const d of a)
-            i.current.has(d.id) && !e.find((I) => I.id === d.id) && p.push(d);
-          return p;
+        y((E) => {
+          const t = m.map((i) => s.current.has(i.id) && E.find((f) => f.id === i.id) || i);
+          for (const i of E)
+            s.current.has(i.id) && !m.find((f) => f.id === i.id) && t.push(i);
+          return t;
         });
       } catch {
       }
     };
-    f();
-    const u = setInterval(f, 3e3);
+    u();
+    const l = setInterval(u, 3e3);
     return () => {
-      c = !1, clearInterval(u);
+      c = !1, clearInterval(l);
     };
-  }, [r, n, l]);
-  const y = x(
-    (c, f) => {
-      const u = {
+  }, [r, n, d]);
+  const w = p(
+    (c, u) => {
+      const l = {
         id: `n-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
         x: c,
-        y: f,
+        y: u,
         text: "",
         colorIndex: 0,
         minimized: !1,
         createdAt: Date.now()
       };
-      return b((e) => [...e, u]), r && (i.current.add(u.id), C(n, { method: "POST", body: JSON.stringify(u) }, l).catch(() => {
-      }).finally(() => i.current.delete(u.id))), u;
+      return y((m) => [...m, l]), r && (s.current.add(l.id), I(n, { method: "POST", body: JSON.stringify(l) }, d).catch(() => {
+      }).finally(() => s.current.delete(l.id))), l;
     },
-    [r, n, l]
-  ), o = x(
-    (c, f) => {
-      b(
-        (u) => u.map((e) => e.id === c ? { ...e, ...f } : e)
-      ), r && (i.current.add(c), clearTimeout(h.current[c]), h.current[c] = setTimeout(() => {
-        C(
+    [r, n, d]
+  ), o = p(
+    (c, u) => {
+      y(
+        (l) => l.map((m) => m.id === c ? { ...m, ...u } : m)
+      ), r && (s.current.add(c), clearTimeout(h.current[c]), h.current[c] = setTimeout(() => {
+        I(
           `${n}/${c}`,
-          { method: "PUT", body: JSON.stringify(f) },
-          l
+          { method: "PUT", body: JSON.stringify(u) },
+          d
         ).catch(() => {
-        }).finally(() => i.current.delete(c));
+        }).finally(() => s.current.delete(c));
       }, 150));
     },
-    [r, n, l]
-  ), w = x(
+    [r, n, d]
+  ), v = p(
     (c) => {
-      b((f) => f.filter((u) => u.id !== c)), r && (i.current.add(c), C(`${n}/${c}`, { method: "DELETE" }, l).catch(() => {
-      }).finally(() => i.current.delete(c)));
+      y((u) => u.filter((l) => l.id !== c)), r && (s.current.add(c), I(`${n}/${c}`, { method: "DELETE" }, d).catch(() => {
+      }).finally(() => s.current.delete(c)));
     },
-    [r, n, l]
+    [r, n, d]
   );
-  return { notes: s, addNote: y, updateNote: o, deleteNote: w };
+  return { notes: a, addNote: w, updateNote: o, deleteNote: v };
 }
 const M = `@keyframes stickyNotePulse {
   0%, 100% { transform: scale(1); opacity: 0.85; }
   50% { transform: scale(1.18); opacity: 1; }
 }`;
-let z = !1;
-function R() {
-  if (z) return;
-  const t = document.createElement("style");
-  t.textContent = M, document.head.appendChild(t), z = !0;
+let D = !1;
+function j() {
+  if (D) return;
+  const e = document.createElement("style");
+  e.textContent = M, document.head.appendChild(e), D = !0;
 }
-function j({ note: t, onUpdate: n, onDelete: l }) {
-  const r = v[t.colorIndex % v.length], g = S(null), [s, b] = N(!1), i = S(!1), h = S({ x: 0, y: 0 });
-  k(() => {
-    R();
-  }, []), k(() => {
-    !t.minimized && g.current && requestAnimationFrame(() => {
-      var a;
-      const e = (a = g.current) == null ? void 0 : a.querySelector("textarea");
-      e && e.focus();
+function O({ note: e, onUpdate: n, onDelete: d }) {
+  const r = k[e.colorIndex % k.length], g = S(null), [a, y] = z(!1), s = S(!1), h = S({ x: 0, y: 0 }), w = S({ x: 0, y: 0 });
+  C(() => {
+    j();
+  }, []), C(() => {
+    !e.minimized && g.current && requestAnimationFrame(() => {
+      var i;
+      const t = (i = g.current) == null ? void 0 : i.querySelector("textarea");
+      t && t.focus();
     });
-  }, [t.minimized]);
-  const y = x(
-    (e, a) => {
-      h.current = {
-        x: e - t.x,
-        y: a - t.y
-      }, i.current = !1, b(!0);
+  }, [e.minimized]);
+  const o = p(
+    (t, i) => {
+      w.current = {
+        x: t - e.x,
+        y: i - e.y
+      }, h.current = { x: t, y: i }, s.current = !1, y(!0);
     },
-    [t.x, t.y]
-  ), o = x(
-    (e, a) => {
-      s && (i.current = !0, n(t.id, {
-        x: e - h.current.x,
-        y: a - h.current.y
+    [e.x, e.y]
+  ), v = 5, c = p(
+    (t, i) => {
+      if (!a) return;
+      const f = t - h.current.x, x = i - h.current.y;
+      !s.current && f * f + x * x < v * v || (s.current = !0, n(e.id, {
+        x: t - w.current.x,
+        y: i - w.current.y
       }));
     },
-    [s, t.id, n]
-  ), w = x(() => {
-    b(!1);
+    [a, e.id, n]
+  ), u = p(() => {
+    y(!1);
   }, []);
-  k(() => {
-    if (!s) return;
-    const e = (d) => o(d.clientX, d.clientY), a = (d) => {
-      d.preventDefault(), o(d.touches[0].clientX, d.touches[0].clientY);
-    }, p = () => w();
-    return window.addEventListener("mousemove", e), window.addEventListener("mouseup", p), window.addEventListener("touchmove", a, { passive: !1 }), window.addEventListener("touchend", p), () => {
-      window.removeEventListener("mousemove", e), window.removeEventListener("mouseup", p), window.removeEventListener("touchmove", a), window.removeEventListener("touchend", p);
+  C(() => {
+    if (!a) return;
+    const t = (x) => c(x.clientX, x.clientY), i = (x) => {
+      x.preventDefault(), c(x.touches[0].clientX, x.touches[0].clientY);
+    }, f = () => u();
+    return window.addEventListener("mousemove", t), window.addEventListener("mouseup", f), window.addEventListener("touchmove", i, { passive: !1 }), window.addEventListener("touchend", f), () => {
+      window.removeEventListener("mousemove", t), window.removeEventListener("mouseup", f), window.removeEventListener("touchmove", i), window.removeEventListener("touchend", f);
     };
-  }, [s, o, w]);
-  const c = () => {
-    n(t.id, {
-      colorIndex: (t.colorIndex + 1) % v.length
+  }, [a, c, u]);
+  const l = () => {
+    n(e.id, {
+      colorIndex: (e.colorIndex + 1) % k.length
     });
-  }, f = () => {
-    window.confirm("Delete this note?") && l(t.id);
-  }, u = x(
-    (e) => {
-      e.relatedTarget && e.currentTarget.contains(e.relatedTarget) || s || n(t.id, { minimized: !0 });
+  }, m = () => {
+    window.confirm("Delete this note?") && d(e.id);
+  }, E = p(
+    (t) => {
+      t.relatedTarget && t.currentTarget.contains(t.relatedTarget) || a || n(e.id, { minimized: !0 });
     },
-    [t.id, n, s]
+    [e.id, n, a]
   );
-  return t.minimized ? /* @__PURE__ */ m(
+  return e.minimized ? /* @__PURE__ */ b(
     "div",
     {
-      onMouseDown: (e) => {
-        e.preventDefault(), y(e.clientX, e.clientY);
+      onMouseDown: (t) => {
+        t.preventDefault(), o(t.clientX, t.clientY);
       },
-      onTouchStart: (e) => {
-        y(e.touches[0].clientX, e.touches[0].clientY);
+      onTouchStart: (t) => {
+        o(t.touches[0].clientX, t.touches[0].clientY);
       },
       onClick: () => {
-        i.current || n(t.id, { minimized: !1 });
+        s.current || n(e.id, { minimized: !1 });
       },
       style: {
         position: "fixed",
-        left: t.x,
-        top: t.y,
+        left: e.x,
+        top: e.y,
         width: 18,
         height: 18,
         borderRadius: "50%",
         backgroundColor: r.border,
-        cursor: s ? "grabbing" : "pointer",
+        cursor: a ? "grabbing" : "pointer",
         zIndex: 1e4,
         boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
-        animation: s ? "none" : "stickyNotePulse 2.5s ease-in-out infinite"
+        animation: a ? "none" : "stickyNotePulse 2.5s ease-in-out infinite"
       },
       title: "Click to expand"
     }
-  ) : /* @__PURE__ */ E(
+  ) : /* @__PURE__ */ N(
     "div",
     {
       ref: g,
       tabIndex: -1,
-      onBlur: u,
+      onBlur: E,
       style: {
         position: "fixed",
-        left: t.x,
-        top: t.y,
+        left: e.x,
+        top: e.y,
         width: 220,
         backgroundColor: r.bg,
         border: `1.5px solid ${r.border}`,
         borderRadius: 8,
-        boxShadow: s ? "0 8px 24px rgba(0,0,0,0.18)" : "0 2px 8px rgba(0,0,0,0.12)",
-        zIndex: s ? 10002 : 10001,
+        boxShadow: a ? "0 8px 24px rgba(0,0,0,0.18)" : "0 2px 8px rgba(0,0,0,0.12)",
+        zIndex: a ? 10002 : 10001,
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         fontSize: 13,
-        userSelect: s ? "none" : "auto",
-        transition: s ? "none" : "box-shadow 0.2s",
+        userSelect: a ? "none" : "auto",
+        transition: a ? "none" : "box-shadow 0.2s",
         outline: "none"
       },
       children: [
-        /* @__PURE__ */ E(
+        /* @__PURE__ */ N(
           "div",
           {
-            onMouseDown: (e) => {
-              e.preventDefault(), y(e.clientX, e.clientY);
+            onMouseDown: (t) => {
+              t.preventDefault(), o(t.clientX, t.clientY);
             },
-            onTouchStart: (e) => {
-              y(e.touches[0].clientX, e.touches[0].clientY);
+            onTouchStart: (t) => {
+              o(t.touches[0].clientX, t.touches[0].clientY);
             },
             style: {
               display: "flex",
@@ -229,7 +231,7 @@ function j({ note: t, onUpdate: n, onDelete: l }) {
               backgroundColor: r.border + "33"
             },
             children: [
-              /* @__PURE__ */ m(
+              /* @__PURE__ */ b(
                 "div",
                 {
                   style: {
@@ -241,27 +243,27 @@ function j({ note: t, onUpdate: n, onDelete: l }) {
                   }
                 }
               ),
-              /* @__PURE__ */ E("div", { style: { display: "flex", gap: 4 }, children: [
-                /* @__PURE__ */ m(
+              /* @__PURE__ */ N("div", { style: { display: "flex", gap: 4 }, children: [
+                /* @__PURE__ */ b(
                   "button",
                   {
-                    onClick: c,
+                    onClick: l,
                     style: {
                       width: 18,
                       height: 18,
                       borderRadius: "50%",
                       border: `1.5px solid ${r.text}44`,
-                      background: `conic-gradient(${v.map((e, a) => `${e.border} ${a / v.length * 100}% ${(a + 1) / v.length * 100}%`).join(", ")})`,
+                      background: `conic-gradient(${k.map((t, i) => `${t.border} ${i / k.length * 100}% ${(i + 1) / k.length * 100}%`).join(", ")})`,
                       cursor: "pointer",
                       padding: 0
                     },
                     title: "Change color"
                   }
                 ),
-                /* @__PURE__ */ m(
+                /* @__PURE__ */ b(
                   "button",
                   {
-                    onClick: () => n(t.id, { minimized: !0 }),
+                    onClick: () => n(e.id, { minimized: !0 }),
                     style: {
                       width: 18,
                       height: 18,
@@ -281,10 +283,10 @@ function j({ note: t, onUpdate: n, onDelete: l }) {
                     children: "−"
                   }
                 ),
-                /* @__PURE__ */ m(
+                /* @__PURE__ */ b(
                   "button",
                   {
-                    onClick: f,
+                    onClick: m,
                     style: {
                       width: 18,
                       height: 18,
@@ -308,11 +310,11 @@ function j({ note: t, onUpdate: n, onDelete: l }) {
             ]
           }
         ),
-        /* @__PURE__ */ m(
+        /* @__PURE__ */ b(
           "textarea",
           {
-            value: t.text,
-            onChange: (e) => n(t.id, { text: e.target.value }),
+            value: e.text,
+            onChange: (t) => n(e.id, { text: t.target.value }),
             placeholder: "Write a note...",
             style: {
               width: "100%",
@@ -333,32 +335,32 @@ function j({ note: t, onUpdate: n, onDelete: l }) {
     }
   );
 }
-function O({
-  storageKey: t = "react-sticky-notes",
+function A({
+  storageKey: e = "react-sticky-notes",
   apiUrl: n = null,
-  apiKey: l = null
+  apiKey: d = null
 }) {
-  const { notes: r, addNote: g, updateNote: s, deleteNote: b } = L(
-    t,
+  const { notes: r, addNote: g, updateNote: a, deleteNote: y } = R(
+    e,
     n,
-    l
-  ), [i, h] = N(!1), y = x(
+    d
+  ), [s, h] = z(!1), w = p(
     (o) => {
       o.target.closest("[data-sticky-fab]") || o.target.closest("[data-sticky-note]") || (g(o.clientX - 110, o.clientY - 20), h(!1));
     },
     [g]
   );
-  return k(() => {
-    if (!i) return;
-    const o = (w) => {
-      w.key === "Escape" && h(!1);
+  return C(() => {
+    if (!s) return;
+    const o = (v) => {
+      v.key === "Escape" && h(!1);
     };
     return window.addEventListener("keydown", o), () => window.removeEventListener("keydown", o);
-  }, [i]), /* @__PURE__ */ E(D, { children: [
-    i && /* @__PURE__ */ m(
+  }, [s]), /* @__PURE__ */ N(T, { children: [
+    s && /* @__PURE__ */ b(
       "div",
       {
-        onClick: y,
+        onClick: w,
         style: {
           position: "fixed",
           inset: 0,
@@ -368,8 +370,8 @@ function O({
         }
       }
     ),
-    r.map((o) => /* @__PURE__ */ m("div", { "data-sticky-note": !0, children: /* @__PURE__ */ m(j, { note: o, onUpdate: s, onDelete: b }) }, o.id)),
-    /* @__PURE__ */ m(
+    r.map((o) => /* @__PURE__ */ b("div", { "data-sticky-note": !0, children: /* @__PURE__ */ b(O, { note: o, onUpdate: a, onDelete: y }) }, o.id)),
+    /* @__PURE__ */ b(
       "button",
       {
         "data-sticky-fab": !0,
@@ -382,8 +384,8 @@ function O({
           height: 48,
           borderRadius: "50%",
           border: "none",
-          backgroundColor: i ? "#ef4444" : "#fbbf24",
-          color: i ? "#fff" : "#713f12",
+          backgroundColor: s ? "#ef4444" : "#fbbf24",
+          color: s ? "#fff" : "#713f12",
           fontSize: 24,
           fontWeight: "bold",
           cursor: "pointer",
@@ -401,14 +403,14 @@ function O({
         onMouseLeave: (o) => {
           o.currentTarget.style.transform = "scale(1)";
         },
-        title: i ? "Cancel (Esc)" : "Add sticky note",
-        children: i ? "×" : "+"
+        title: s ? "Cancel (Esc)" : "Add sticky note",
+        children: s ? "×" : "+"
       }
     )
   ] });
 }
 export {
-  v as COLORS,
-  O as StickyNotes,
-  L as useNotes
+  k as COLORS,
+  A as StickyNotes,
+  R as useNotes
 };
