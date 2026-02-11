@@ -1,11 +1,30 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { COLORS } from "./useNotes.js";
 
+const PULSE_KEYFRAMES = `@keyframes stickyNotePulse {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.18); opacity: 1; }
+}`;
+
+let pulseStyleInjected = false;
+function ensurePulseStyle() {
+  if (pulseStyleInjected) return;
+  const style = document.createElement("style");
+  style.textContent = PULSE_KEYFRAMES;
+  document.head.appendChild(style);
+  pulseStyleInjected = true;
+}
+
 export function Note({ note, onUpdate, onDelete }) {
   const color = COLORS[note.colorIndex % COLORS.length];
   const dragRef = useRef(null);
   const [dragging, setDragging] = useState(false);
+  const didDrag = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    ensurePulseStyle();
+  }, []);
 
   const startDrag = useCallback(
     (clientX, clientY) => {
@@ -13,6 +32,7 @@ export function Note({ note, onUpdate, onDelete }) {
         x: clientX - note.x,
         y: clientY - note.y,
       };
+      didDrag.current = false;
       setDragging(true);
     },
     [note.x, note.y]
@@ -21,6 +41,7 @@ export function Note({ note, onUpdate, onDelete }) {
   const onDrag = useCallback(
     (clientX, clientY) => {
       if (!dragging) return;
+      didDrag.current = true;
       onUpdate(note.id, {
         x: clientX - dragOffset.current.x,
         y: clientY - dragOffset.current.y,
@@ -60,11 +81,28 @@ export function Note({ note, onUpdate, onDelete }) {
     });
   };
 
-  // Collapsed state: small circle
+  const confirmDelete = () => {
+    if (window.confirm("Delete this note?")) {
+      onDelete(note.id);
+    }
+  };
+
+  // Collapsed state: small draggable pulsing circle
   if (note.minimized) {
     return (
       <div
-        onClick={() => onUpdate(note.id, { minimized: false })}
+        onMouseDown={(e) => {
+          e.preventDefault();
+          startDrag(e.clientX, e.clientY);
+        }}
+        onTouchStart={(e) => {
+          startDrag(e.touches[0].clientX, e.touches[0].clientY);
+        }}
+        onClick={() => {
+          if (!didDrag.current) {
+            onUpdate(note.id, { minimized: false });
+          }
+        }}
         style={{
           position: "fixed",
           left: note.x,
@@ -73,13 +111,11 @@ export function Note({ note, onUpdate, onDelete }) {
           height: 18,
           borderRadius: "50%",
           backgroundColor: color.border,
-          cursor: "pointer",
+          cursor: dragging ? "grabbing" : "pointer",
           zIndex: 10000,
           boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
-          transition: "transform 0.15s",
+          animation: dragging ? "none" : "stickyNotePulse 2.5s ease-in-out infinite",
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.3)")}
-        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
         title="Click to expand"
       />
     );
@@ -175,7 +211,7 @@ export function Note({ note, onUpdate, onDelete }) {
           </button>
           {/* Delete */}
           <button
-            onClick={() => onDelete(note.id)}
+            onClick={confirmDelete}
             style={{
               width: 18,
               height: 18,
