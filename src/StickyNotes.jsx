@@ -6,11 +6,13 @@ export function StickyNotes({
   storageKey = "react-sticky-notes",
   apiUrl = null,
   apiKey = null,
+  page = null,
 }) {
   const { notes, addNote, updateNote, deleteNote } = useNotes(
     storageKey,
     apiUrl,
-    apiKey
+    apiKey,
+    page
   );
   const [placing, setPlacing] = useState(false);
 

@@ -40,26 +40,35 @@ async function apiFetch(url, options, apiKey) {
   return res.json();
 }
 
-export function useNotes(storageKey = "react-sticky-notes", apiUrl = null, apiKey = null) {
+export function useNotes(storageKey = "react-sticky-notes", apiUrl = null, apiKey = null, page = null) {
   const isApi = !!apiUrl;
   const lsKey = `sticky-notes:${storageKey}`;
-  const [notes, setNotes] = useState(() => (isApi ? [] : loadNotes(lsKey)));
+  const [notes, setNotes] = useState(() => {
+    if (isApi) return [];
+    const all = loadNotes(lsKey);
+    return page ? all.filter((n) => n.page === page) : all;
+  });
   const pendingOps = useRef(new Set());
   const updateTimers = useRef({});
 
   // localStorage persistence (non-API mode only)
   useEffect(() => {
-    if (!isApi) saveNotes(lsKey, notes);
-  }, [isApi, lsKey, notes]);
+    if (isApi) return;
+    // Merge page-filtered notes back into full storage
+    const all = loadNotes(lsKey);
+    const otherPages = page ? all.filter((n) => n.page !== page) : [];
+    saveNotes(lsKey, [...otherPages, ...notes]);
+  }, [isApi, lsKey, notes, page]);
 
   // API: initial fetch + polling
   useEffect(() => {
     if (!isApi) return;
     let active = true;
 
+    const fetchUrl = page ? `${apiUrl}?page=${encodeURIComponent(page)}` : apiUrl;
     const fetchNotes = async () => {
       try {
-        const serverNotes = await apiFetch(apiUrl, {}, apiKey);
+        const serverNotes = await apiFetch(fetchUrl, {}, apiKey);
         if (!active) return;
         setNotes((prev) => {
           // Keep local version of notes with pending operations
@@ -91,7 +100,7 @@ export function useNotes(storageKey = "react-sticky-notes", apiUrl = null, apiKe
       active = false;
       clearInterval(interval);
     };
-  }, [isApi, apiUrl, apiKey]);
+  }, [isApi, apiUrl, apiKey, page]);
 
   const addNote = useCallback(
     (x, y) => {
@@ -103,6 +112,7 @@ export function useNotes(storageKey = "react-sticky-notes", apiUrl = null, apiKe
         colorIndex: 0,
         minimized: false,
         createdAt: Date.now(),
+        ...(page ? { page } : {}),
       };
       setNotes((prev) => [...prev, note]);
 
