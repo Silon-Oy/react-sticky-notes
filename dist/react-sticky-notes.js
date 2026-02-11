@@ -1,6 +1,6 @@
-import { jsx as d, jsxs as m, Fragment as I } from "react/jsx-runtime";
-import { useState as k, useEffect as y, useCallback as g, useRef as w } from "react";
-const h = [
+import { jsx as m, jsxs as E, Fragment as D } from "react/jsx-runtime";
+import { useState as N, useRef as S, useEffect as k, useCallback as x } from "react";
+const v = [
   { name: "yellow", bg: "#fef9c3", border: "#facc15", text: "#713f12" },
   { name: "pink", bg: "#fce7f3", border: "#f472b6", text: "#831843" },
   { name: "blue", bg: "#dbeafe", border: "#60a5fa", text: "#1e3a5f" },
@@ -8,150 +8,215 @@ const h = [
   { name: "orange", bg: "#ffedd5", border: "#fb923c", text: "#7c2d12" },
   { name: "purple", bg: "#f3e8ff", border: "#c084fc", text: "#581c87" }
 ];
-function z(e) {
+function T(t) {
   try {
-    const r = localStorage.getItem(e);
-    return r ? JSON.parse(r) : [];
+    const n = localStorage.getItem(t);
+    return n ? JSON.parse(n) : [];
   } catch {
     return [];
   }
 }
-function D(e, r) {
+function $(t, n) {
   try {
-    localStorage.setItem(e, JSON.stringify(r));
+    localStorage.setItem(t, JSON.stringify(n));
   } catch {
   }
 }
-function N(e = "react-sticky-notes") {
-  const r = `sticky-notes:${e}`, [u, i] = k(() => z(r));
-  y(() => {
-    D(r, u);
-  }, [r, u]);
-  const p = g((c, t) => {
-    const s = {
-      id: `n-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      x: c,
-      y: t,
-      text: "",
-      colorIndex: 0,
-      minimized: !1,
-      createdAt: Date.now()
-    };
-    return i((a) => [...a, s]), s;
-  }, []), o = g((c, t) => {
-    i(
-      (s) => s.map((a) => a.id === c ? { ...a, ...t } : a)
-    );
-  }, []), f = g((c) => {
-    i((t) => t.filter((s) => s.id !== c));
-  }, []);
-  return { notes: u, addNote: p, updateNote: o, deleteNote: f };
+async function C(t, n, l) {
+  const r = await fetch(t, {
+    ...n,
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": l,
+      ...n && n.headers
+    }
+  });
+  if (!r.ok) throw new Error(`API ${r.status}`);
+  return r.json();
 }
-const L = `@keyframes stickyNotePulse {
+function L(t = "react-sticky-notes", n = null, l = null) {
+  const r = !!n, g = `sticky-notes:${t}`, [s, b] = N(() => r ? [] : T(g)), i = S(/* @__PURE__ */ new Set()), h = S({});
+  k(() => {
+    r || $(g, s);
+  }, [r, g, s]), k(() => {
+    if (!r) return;
+    let c = !0;
+    const f = async () => {
+      try {
+        const e = await C(n, {}, l);
+        if (!c) return;
+        b((a) => {
+          const p = e.map((d) => i.current.has(d.id) && a.find((I) => I.id === d.id) || d);
+          for (const d of a)
+            i.current.has(d.id) && !e.find((I) => I.id === d.id) && p.push(d);
+          return p;
+        });
+      } catch {
+      }
+    };
+    f();
+    const u = setInterval(f, 3e3);
+    return () => {
+      c = !1, clearInterval(u);
+    };
+  }, [r, n, l]);
+  const y = x(
+    (c, f) => {
+      const u = {
+        id: `n-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        x: c,
+        y: f,
+        text: "",
+        colorIndex: 0,
+        minimized: !1,
+        createdAt: Date.now()
+      };
+      return b((e) => [...e, u]), r && (i.current.add(u.id), C(n, { method: "POST", body: JSON.stringify(u) }, l).catch(() => {
+      }).finally(() => i.current.delete(u.id))), u;
+    },
+    [r, n, l]
+  ), o = x(
+    (c, f) => {
+      b(
+        (u) => u.map((e) => e.id === c ? { ...e, ...f } : e)
+      ), r && (i.current.add(c), clearTimeout(h.current[c]), h.current[c] = setTimeout(() => {
+        C(
+          `${n}/${c}`,
+          { method: "PUT", body: JSON.stringify(f) },
+          l
+        ).catch(() => {
+        }).finally(() => i.current.delete(c));
+      }, 150));
+    },
+    [r, n, l]
+  ), w = x(
+    (c) => {
+      b((f) => f.filter((u) => u.id !== c)), r && (i.current.add(c), C(`${n}/${c}`, { method: "DELETE" }, l).catch(() => {
+      }).finally(() => i.current.delete(c)));
+    },
+    [r, n, l]
+  );
+  return { notes: s, addNote: y, updateNote: o, deleteNote: w };
+}
+const M = `@keyframes stickyNotePulse {
   0%, 100% { transform: scale(1); opacity: 0.85; }
   50% { transform: scale(1.18); opacity: 1; }
 }`;
-let S = !1;
-function M() {
-  if (S) return;
-  const e = document.createElement("style");
-  e.textContent = L, document.head.appendChild(e), S = !0;
+let z = !1;
+function R() {
+  if (z) return;
+  const t = document.createElement("style");
+  t.textContent = M, document.head.appendChild(t), z = !0;
 }
-function R({ note: e, onUpdate: r, onDelete: u }) {
-  const i = h[e.colorIndex % h.length], p = w(null), [o, f] = k(!1), c = w(!1), t = w({ x: 0, y: 0 });
-  y(() => {
-    M();
-  }, []);
-  const s = g(
-    (n, l) => {
-      t.current = {
-        x: n - e.x,
-        y: l - e.y
-      }, c.current = !1, f(!0);
+function j({ note: t, onUpdate: n, onDelete: l }) {
+  const r = v[t.colorIndex % v.length], g = S(null), [s, b] = N(!1), i = S(!1), h = S({ x: 0, y: 0 });
+  k(() => {
+    R();
+  }, []), k(() => {
+    !t.minimized && g.current && requestAnimationFrame(() => {
+      var a;
+      const e = (a = g.current) == null ? void 0 : a.querySelector("textarea");
+      e && e.focus();
+    });
+  }, [t.minimized]);
+  const y = x(
+    (e, a) => {
+      h.current = {
+        x: e - t.x,
+        y: a - t.y
+      }, i.current = !1, b(!0);
     },
-    [e.x, e.y]
-  ), a = g(
-    (n, l) => {
-      o && (c.current = !0, r(e.id, {
-        x: n - t.current.x,
-        y: l - t.current.y
+    [t.x, t.y]
+  ), o = x(
+    (e, a) => {
+      s && (i.current = !0, n(t.id, {
+        x: e - h.current.x,
+        y: a - h.current.y
       }));
     },
-    [o, e.id, r]
-  ), v = g(() => {
-    f(!1);
+    [s, t.id, n]
+  ), w = x(() => {
+    b(!1);
   }, []);
-  y(() => {
-    if (!o) return;
-    const n = (b) => a(b.clientX, b.clientY), l = (b) => {
-      b.preventDefault(), a(b.touches[0].clientX, b.touches[0].clientY);
-    }, x = () => v();
-    return window.addEventListener("mousemove", n), window.addEventListener("mouseup", x), window.addEventListener("touchmove", l, { passive: !1 }), window.addEventListener("touchend", x), () => {
-      window.removeEventListener("mousemove", n), window.removeEventListener("mouseup", x), window.removeEventListener("touchmove", l), window.removeEventListener("touchend", x);
+  k(() => {
+    if (!s) return;
+    const e = (d) => o(d.clientX, d.clientY), a = (d) => {
+      d.preventDefault(), o(d.touches[0].clientX, d.touches[0].clientY);
+    }, p = () => w();
+    return window.addEventListener("mousemove", e), window.addEventListener("mouseup", p), window.addEventListener("touchmove", a, { passive: !1 }), window.addEventListener("touchend", p), () => {
+      window.removeEventListener("mousemove", e), window.removeEventListener("mouseup", p), window.removeEventListener("touchmove", a), window.removeEventListener("touchend", p);
     };
-  }, [o, a, v]);
-  const C = () => {
-    r(e.id, {
-      colorIndex: (e.colorIndex + 1) % h.length
+  }, [s, o, w]);
+  const c = () => {
+    n(t.id, {
+      colorIndex: (t.colorIndex + 1) % v.length
     });
-  }, E = () => {
-    window.confirm("Delete this note?") && u(e.id);
-  };
-  return e.minimized ? /* @__PURE__ */ d(
+  }, f = () => {
+    window.confirm("Delete this note?") && l(t.id);
+  }, u = x(
+    (e) => {
+      e.relatedTarget && e.currentTarget.contains(e.relatedTarget) || s || n(t.id, { minimized: !0 });
+    },
+    [t.id, n, s]
+  );
+  return t.minimized ? /* @__PURE__ */ m(
     "div",
     {
-      onMouseDown: (n) => {
-        n.preventDefault(), s(n.clientX, n.clientY);
+      onMouseDown: (e) => {
+        e.preventDefault(), y(e.clientX, e.clientY);
       },
-      onTouchStart: (n) => {
-        s(n.touches[0].clientX, n.touches[0].clientY);
+      onTouchStart: (e) => {
+        y(e.touches[0].clientX, e.touches[0].clientY);
       },
       onClick: () => {
-        c.current || r(e.id, { minimized: !1 });
+        i.current || n(t.id, { minimized: !1 });
       },
       style: {
         position: "fixed",
-        left: e.x,
-        top: e.y,
+        left: t.x,
+        top: t.y,
         width: 18,
         height: 18,
         borderRadius: "50%",
-        backgroundColor: i.border,
-        cursor: o ? "grabbing" : "pointer",
+        backgroundColor: r.border,
+        cursor: s ? "grabbing" : "pointer",
         zIndex: 1e4,
         boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
-        animation: o ? "none" : "stickyNotePulse 2.5s ease-in-out infinite"
+        animation: s ? "none" : "stickyNotePulse 2.5s ease-in-out infinite"
       },
       title: "Click to expand"
     }
-  ) : /* @__PURE__ */ m(
+  ) : /* @__PURE__ */ E(
     "div",
     {
-      ref: p,
+      ref: g,
+      tabIndex: -1,
+      onBlur: u,
       style: {
         position: "fixed",
-        left: e.x,
-        top: e.y,
+        left: t.x,
+        top: t.y,
         width: 220,
-        backgroundColor: i.bg,
-        border: `1.5px solid ${i.border}`,
+        backgroundColor: r.bg,
+        border: `1.5px solid ${r.border}`,
         borderRadius: 8,
-        boxShadow: o ? "0 8px 24px rgba(0,0,0,0.18)" : "0 2px 8px rgba(0,0,0,0.12)",
-        zIndex: o ? 10002 : 10001,
+        boxShadow: s ? "0 8px 24px rgba(0,0,0,0.18)" : "0 2px 8px rgba(0,0,0,0.12)",
+        zIndex: s ? 10002 : 10001,
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         fontSize: 13,
-        userSelect: o ? "none" : "auto",
-        transition: o ? "none" : "box-shadow 0.2s"
+        userSelect: s ? "none" : "auto",
+        transition: s ? "none" : "box-shadow 0.2s",
+        outline: "none"
       },
       children: [
-        /* @__PURE__ */ m(
+        /* @__PURE__ */ E(
           "div",
           {
-            onMouseDown: (n) => {
-              n.preventDefault(), s(n.clientX, n.clientY);
+            onMouseDown: (e) => {
+              e.preventDefault(), y(e.clientX, e.clientY);
             },
-            onTouchStart: (n) => {
-              s(n.touches[0].clientX, n.touches[0].clientY);
+            onTouchStart: (e) => {
+              y(e.touches[0].clientX, e.touches[0].clientY);
             },
             style: {
               display: "flex",
@@ -159,51 +224,51 @@ function R({ note: e, onUpdate: r, onDelete: u }) {
               justifyContent: "space-between",
               padding: "5px 8px",
               cursor: "grab",
-              borderBottom: `1px solid ${i.border}`,
+              borderBottom: `1px solid ${r.border}`,
               borderRadius: "8px 8px 0 0",
-              backgroundColor: i.border + "33"
+              backgroundColor: r.border + "33"
             },
             children: [
-              /* @__PURE__ */ d(
+              /* @__PURE__ */ m(
                 "div",
                 {
                   style: {
                     width: 30,
                     height: 4,
                     borderRadius: 2,
-                    backgroundColor: i.border,
+                    backgroundColor: r.border,
                     opacity: 0.5
                   }
                 }
               ),
-              /* @__PURE__ */ m("div", { style: { display: "flex", gap: 4 }, children: [
-                /* @__PURE__ */ d(
+              /* @__PURE__ */ E("div", { style: { display: "flex", gap: 4 }, children: [
+                /* @__PURE__ */ m(
                   "button",
                   {
-                    onClick: C,
+                    onClick: c,
                     style: {
                       width: 18,
                       height: 18,
                       borderRadius: "50%",
-                      border: `1.5px solid ${i.text}44`,
-                      background: `conic-gradient(${h.map((n, l) => `${n.border} ${l / h.length * 100}% ${(l + 1) / h.length * 100}%`).join(", ")})`,
+                      border: `1.5px solid ${r.text}44`,
+                      background: `conic-gradient(${v.map((e, a) => `${e.border} ${a / v.length * 100}% ${(a + 1) / v.length * 100}%`).join(", ")})`,
                       cursor: "pointer",
                       padding: 0
                     },
                     title: "Change color"
                   }
                 ),
-                /* @__PURE__ */ d(
+                /* @__PURE__ */ m(
                   "button",
                   {
-                    onClick: () => r(e.id, { minimized: !0 }),
+                    onClick: () => n(t.id, { minimized: !0 }),
                     style: {
                       width: 18,
                       height: 18,
                       borderRadius: "50%",
                       border: "none",
-                      background: i.text + "22",
-                      color: i.text,
+                      background: r.text + "22",
+                      color: r.text,
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
@@ -216,10 +281,10 @@ function R({ note: e, onUpdate: r, onDelete: u }) {
                     children: "−"
                   }
                 ),
-                /* @__PURE__ */ d(
+                /* @__PURE__ */ m(
                   "button",
                   {
-                    onClick: E,
+                    onClick: f,
                     style: {
                       width: 18,
                       height: 18,
@@ -243,11 +308,11 @@ function R({ note: e, onUpdate: r, onDelete: u }) {
             ]
           }
         ),
-        /* @__PURE__ */ d(
+        /* @__PURE__ */ m(
           "textarea",
           {
-            value: e.text,
-            onChange: (n) => r(e.id, { text: n.target.value }),
+            value: t.text,
+            onChange: (e) => n(t.id, { text: e.target.value }),
             placeholder: "Write a note...",
             style: {
               width: "100%",
@@ -255,7 +320,7 @@ function R({ note: e, onUpdate: r, onDelete: u }) {
               padding: "8px 10px",
               border: "none",
               background: "transparent",
-              color: i.text,
+              color: r.text,
               fontSize: 13,
               fontFamily: "inherit",
               resize: "vertical",
@@ -268,24 +333,32 @@ function R({ note: e, onUpdate: r, onDelete: u }) {
     }
   );
 }
-function Y({ storageKey: e = "react-sticky-notes" }) {
-  const { notes: r, addNote: u, updateNote: i, deleteNote: p } = N(e), [o, f] = k(!1), c = g(
-    (t) => {
-      t.target.closest("[data-sticky-fab]") || t.target.closest("[data-sticky-note]") || (u(t.clientX - 110, t.clientY - 20), f(!1));
+function O({
+  storageKey: t = "react-sticky-notes",
+  apiUrl: n = null,
+  apiKey: l = null
+}) {
+  const { notes: r, addNote: g, updateNote: s, deleteNote: b } = L(
+    t,
+    n,
+    l
+  ), [i, h] = N(!1), y = x(
+    (o) => {
+      o.target.closest("[data-sticky-fab]") || o.target.closest("[data-sticky-note]") || (g(o.clientX - 110, o.clientY - 20), h(!1));
     },
-    [u]
+    [g]
   );
-  return y(() => {
-    if (!o) return;
-    const t = (s) => {
-      s.key === "Escape" && f(!1);
+  return k(() => {
+    if (!i) return;
+    const o = (w) => {
+      w.key === "Escape" && h(!1);
     };
-    return window.addEventListener("keydown", t), () => window.removeEventListener("keydown", t);
-  }, [o]), /* @__PURE__ */ m(I, { children: [
-    o && /* @__PURE__ */ d(
+    return window.addEventListener("keydown", o), () => window.removeEventListener("keydown", o);
+  }, [i]), /* @__PURE__ */ E(D, { children: [
+    i && /* @__PURE__ */ m(
       "div",
       {
-        onClick: c,
+        onClick: y,
         style: {
           position: "fixed",
           inset: 0,
@@ -295,19 +368,12 @@ function Y({ storageKey: e = "react-sticky-notes" }) {
         }
       }
     ),
-    r.map((t) => /* @__PURE__ */ d("div", { "data-sticky-note": !0, children: /* @__PURE__ */ d(
-      R,
-      {
-        note: t,
-        onUpdate: i,
-        onDelete: p
-      }
-    ) }, t.id)),
-    /* @__PURE__ */ d(
+    r.map((o) => /* @__PURE__ */ m("div", { "data-sticky-note": !0, children: /* @__PURE__ */ m(j, { note: o, onUpdate: s, onDelete: b }) }, o.id)),
+    /* @__PURE__ */ m(
       "button",
       {
         "data-sticky-fab": !0,
-        onClick: () => f((t) => !t),
+        onClick: () => h((o) => !o),
         style: {
           position: "fixed",
           bottom: 24,
@@ -316,8 +382,8 @@ function Y({ storageKey: e = "react-sticky-notes" }) {
           height: 48,
           borderRadius: "50%",
           border: "none",
-          backgroundColor: o ? "#ef4444" : "#fbbf24",
-          color: o ? "#fff" : "#713f12",
+          backgroundColor: i ? "#ef4444" : "#fbbf24",
+          color: i ? "#fff" : "#713f12",
           fontSize: 24,
           fontWeight: "bold",
           cursor: "pointer",
@@ -329,20 +395,20 @@ function Y({ storageKey: e = "react-sticky-notes" }) {
           transition: "all 0.2s",
           fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
         },
-        onMouseEnter: (t) => {
-          t.currentTarget.style.transform = "scale(1.1)";
+        onMouseEnter: (o) => {
+          o.currentTarget.style.transform = "scale(1.1)";
         },
-        onMouseLeave: (t) => {
-          t.currentTarget.style.transform = "scale(1)";
+        onMouseLeave: (o) => {
+          o.currentTarget.style.transform = "scale(1)";
         },
-        title: o ? "Cancel (Esc)" : "Add sticky note",
-        children: o ? "×" : "+"
+        title: i ? "Cancel (Esc)" : "Add sticky note",
+        children: i ? "×" : "+"
       }
     )
   ] });
 }
 export {
-  h as COLORS,
-  Y as StickyNotes,
-  N as useNotes
+  v as COLORS,
+  O as StickyNotes,
+  L as useNotes
 };

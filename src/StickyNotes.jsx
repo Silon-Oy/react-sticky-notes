@@ -2,14 +2,24 @@ import { useState, useCallback, useEffect } from "react";
 import { useNotes } from "./useNotes.js";
 import { Note } from "./Note.jsx";
 
-export function StickyNotes({ storageKey = "react-sticky-notes" }) {
-  const { notes, addNote, updateNote, deleteNote } = useNotes(storageKey);
+export function StickyNotes({
+  storageKey = "react-sticky-notes",
+  apiUrl = null,
+  apiKey = null,
+}) {
+  const { notes, addNote, updateNote, deleteNote } = useNotes(
+    storageKey,
+    apiUrl,
+    apiKey
+  );
   const [placing, setPlacing] = useState(false);
 
   const handlePlacementClick = useCallback(
     (e) => {
-      // Ignore clicks on the FAB itself or on existing notes
-      if (e.target.closest("[data-sticky-fab]") || e.target.closest("[data-sticky-note]")) {
+      if (
+        e.target.closest("[data-sticky-fab]") ||
+        e.target.closest("[data-sticky-note]")
+      ) {
         return;
       }
       addNote(e.clientX - 110, e.clientY - 20);
@@ -46,11 +56,7 @@ export function StickyNotes({ storageKey = "react-sticky-notes" }) {
       {/* Notes */}
       {notes.map((note) => (
         <div key={note.id} data-sticky-note>
-          <Note
-            note={note}
-            onUpdate={updateNote}
-            onDelete={deleteNote}
-          />
+          <Note note={note} onUpdate={updateNote} onDelete={deleteNote} />
         </div>
       ))}
 
@@ -77,7 +83,8 @@ export function StickyNotes({ storageKey = "react-sticky-notes" }) {
           justifyContent: "center",
           zIndex: 9999,
           transition: "all 0.2s",
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          fontFamily:
+            "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = "scale(1.1)";

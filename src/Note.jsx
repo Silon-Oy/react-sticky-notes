@@ -17,7 +17,7 @@ function ensurePulseStyle() {
 
 export function Note({ note, onUpdate, onDelete }) {
   const color = COLORS[note.colorIndex % COLORS.length];
-  const dragRef = useRef(null);
+  const containerRef = useRef(null);
   const [dragging, setDragging] = useState(false);
   const didDrag = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
@@ -25,6 +25,16 @@ export function Note({ note, onUpdate, onDelete }) {
   useEffect(() => {
     ensurePulseStyle();
   }, []);
+
+  // Auto-focus textarea when note expands
+  useEffect(() => {
+    if (!note.minimized && containerRef.current) {
+      requestAnimationFrame(() => {
+        const textarea = containerRef.current?.querySelector("textarea");
+        if (textarea) textarea.focus();
+      });
+    }
+  }, [note.minimized]);
 
   const startDrag = useCallback(
     (clientX, clientY) => {
@@ -87,6 +97,20 @@ export function Note({ note, onUpdate, onDelete }) {
     }
   };
 
+  // Auto-minimize when focus leaves the expanded note
+  const handleBlur = useCallback(
+    (e) => {
+      // If focus moves to another element within this note, don't minimize
+      if (e.relatedTarget && e.currentTarget.contains(e.relatedTarget)) {
+        return;
+      }
+      // Don't minimize during drag
+      if (dragging) return;
+      onUpdate(note.id, { minimized: true });
+    },
+    [note.id, onUpdate, dragging]
+  );
+
   // Collapsed state: small draggable pulsing circle
   if (note.minimized) {
     return (
@@ -114,7 +138,9 @@ export function Note({ note, onUpdate, onDelete }) {
           cursor: dragging ? "grabbing" : "pointer",
           zIndex: 10000,
           boxShadow: "0 1px 4px rgba(0,0,0,0.2)",
-          animation: dragging ? "none" : "stickyNotePulse 2.5s ease-in-out infinite",
+          animation: dragging
+            ? "none"
+            : "stickyNotePulse 2.5s ease-in-out infinite",
         }}
         title="Click to expand"
       />
@@ -124,7 +150,9 @@ export function Note({ note, onUpdate, onDelete }) {
   // Expanded state
   return (
     <div
-      ref={dragRef}
+      ref={containerRef}
+      tabIndex={-1}
+      onBlur={handleBlur}
       style={{
         position: "fixed",
         left: note.x,
@@ -137,10 +165,12 @@ export function Note({ note, onUpdate, onDelete }) {
           ? "0 8px 24px rgba(0,0,0,0.18)"
           : "0 2px 8px rgba(0,0,0,0.12)",
         zIndex: dragging ? 10002 : 10001,
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         fontSize: 13,
         userSelect: dragging ? "none" : "auto",
         transition: dragging ? "none" : "box-shadow 0.2s",
+        outline: "none",
       }}
     >
       {/* Drag handle / header */}
